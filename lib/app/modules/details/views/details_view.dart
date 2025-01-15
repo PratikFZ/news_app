@@ -27,9 +27,27 @@ class DetailsView extends StatelessWidget {
               background: Hero(
                 tag: article.url,
                 child: article.urlToImage != null
-                    ? Image.network(
-                        article.urlToImage!,
-                        fit: BoxFit.cover,
+                    ? Stack(
+                        children: [
+                          Image.network(
+                            article.urlToImage!,
+                            fit: BoxFit.cover,
+                            width: double.infinity,
+                            height: double.infinity,
+                          ),
+                          Container(
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                begin: Alignment.topCenter,
+                                end: Alignment.bottomCenter,
+                                colors: [
+                                  Colors.transparent,
+                                  const Color.fromARGB(223, 0, 0, 0),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
                       )
                     : Container(
                         color: Colors.grey[300],
