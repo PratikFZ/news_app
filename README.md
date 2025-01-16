@@ -2,15 +2,37 @@
 
 A new Flutter project.
 
-## Getting Started
+Here are some important notes about the news app:
 
-This project is a starting point for a Flutter application.
+1. Error Handling & Null Safety:
+   - All required fields have proper null safety handling
+   - The app safely handles [Removed] content by filtering it out
+   - DateTime parsing includes fallback to current time if invalid
+   - Null-safe access implemented for nested JSON objects (source name)
 
-A few resources to get you started if this is your first Flutter project:
+2. Hive Implementation:
+   - Proper setup with HiveObject extension for persistence
+   - Custom TypeAdapter for Article model
+   - DateTime adapter registration required for proper date storage
+   - Fields are properly annotated with @HiveField tags
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+3. Data Processing:
+   - Response body is properly decoded from JSON
+   - Articles are filtered before conversion to Article objects
+   - Efficient list processing using map and where functions
+   - Default values provided for missing or invalid data
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+4. Best Practices Used:
+   - Clean separation of model and adapter code
+   - Factory pattern for JSON deserialization
+   - Required vs optional fields clearly defined
+   - Consistent error handling approach
+
+5. Future Enhancement Possibilities:
+   - Add pagination support
+   - Implement caching strategy
+   - Add error retry mechanism
+   - Include refresh functionality
+   - Add article search/filtering features
+
+Would you like me to elaborate on any of these points or add additional notes?
