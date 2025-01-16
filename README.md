@@ -34,5 +34,3 @@ Here are some important notes about the news app:
    - Add error retry mechanism
    - Include refresh functionality
    - Add article search/filtering features
-
-Would you like me to elaborate on any of these points or add additional notes?
