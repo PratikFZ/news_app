@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'dart:async';
+import 'package:intl/intl.dart';
 import '../../../data/models/article_model.dart';
 import '../controllers/home_controller.dart';
 import '../../../routes/app_pages.dart';
@@ -10,92 +12,310 @@ class HomeView extends GetView<HomeController> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: CustomScrollView(
-        slivers: [
-          SliverAppBar(
-            floating: true,
-            expandedHeight: 120,
-            flexibleSpace: FlexibleSpaceBar(
-              title: const Text('Daily News'),
-              background: Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [Colors.blue.shade700, Colors.blue.shade900],
-                  ),
+      body: SafeArea(
+        child: CustomScrollView(
+          slivers: [
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Row(
+                      children: [
+                        IconButton(
+                          icon: const Icon(Icons.menu),
+                          onPressed: () {},
+                        ),
+                        const Text(
+                          'Breaking News',
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                    Row(
+                      children: [
+                        IconButton(
+                          icon: const Icon(Icons.search),
+                          onPressed: () => Get.toNamed(Routes.SEARCH),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.notifications_outlined),
+                          onPressed: () {},
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
               ),
             ),
-          ),
-          SliverToBoxAdapter(
-            child: CategoryList(controller: controller),
-          ),
-          Obx(() {
-            if (controller.isLoading.value) {
-              return const SliverFillRemaining(
-                child: Center(child: CircularProgressIndicator()),
-              );
-            }
-            return SliverList(
-              delegate: SliverChildBuilderDelegate(
-                (context, index) {
-                  final article = controller.articles[index];
-                  return NewsListItem(
-                    article: article,
-                    onTap: () => Get.toNamed(
-                      Routes.DETAILS,
-                      arguments: article,
+            SliverToBoxAdapter(
+              child: BreakingNewsCarousel(controller: controller),
+            ),
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'Recommendation',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
-                  );
-                },
-                childCount: controller.articles.length,
+                    TextButton(
+                      onPressed: () {},
+                      child: const Text('View all'),
+                    ),
+                  ],
+                ),
               ),
-            );
-          }),
+            ),
+            Obx(() {
+              if (controller.isLoading.value) {
+                return const SliverFillRemaining(
+                  child: Center(child: CircularProgressIndicator()),
+                );
+              }
+              return SliverList(
+                delegate: SliverChildBuilderDelegate(
+                  (context, index) {
+                    final article = controller.articles[index];
+                    return RecommendationNewsCard(
+                      article: article,
+                      onTap: () => Get.toNamed(
+                        Routes.DETAILS,
+                        arguments: article,
+                      ),
+                    );
+                  },
+                  childCount: controller.articles.length,
+                ),
+              );
+            }),
+          ],
+        ),
+      ),
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: 0,
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home, color: Colors.black,),
+            label: 'Home',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.language, color: Colors.black),
+            label: 'Discover',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.bookmark_border, color: Colors.black),
+            label: 'Saved',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.person_outline, color: Colors.black),
+            label: 'Profile',
+          ),
         ],
       ),
     );
   }
 }
 
-class CategoryList extends StatelessWidget {
+class BreakingNewsCarousel extends StatefulWidget {
   final HomeController controller;
 
-  const CategoryList({super.key, required this.controller});
+  const BreakingNewsCarousel({
+    super.key,
+    required this.controller,
+  });
+
+  @override
+  State<BreakingNewsCarousel> createState() => _BreakingNewsCarouselState();
+}
+
+class _BreakingNewsCarouselState extends State<BreakingNewsCarousel> {
+  final PageController _pageController = PageController();
+  Timer? _timer;
+  int _currentPage = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _startAutoScroll();
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  void _startAutoScroll() {
+    _timer = Timer.periodic(const Duration(seconds: 3), (timer) {
+      if (_currentPage < widget.controller.articles.length - 1) {
+        _currentPage++;
+      } else {
+        _currentPage = 0;
+      }
+      _pageController.animateToPage(
+        _currentPage,
+        duration: const Duration(milliseconds: 350),
+        curve: Curves.easeIn,
+      );
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height: 50,
-      margin: const EdgeInsets.symmetric(vertical: 8),
-      child: ListView.builder(
-        scrollDirection: Axis.horizontal,
-        itemCount: controller.categories.length,
-        itemBuilder: (context, index) {
-          final category = controller.categories[index];
-          return Obx(() {
-            final isSelected = controller.selectedCategory.value == category;
-            return Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 4),
-              child: FilterChip(
-                label: Text(category.toUpperCase()),
-                selected: isSelected,
-                onSelected: (_) => controller.changeCategory(category),
-                backgroundColor: Colors.white,
-                selectedColor: Colors.blue.shade100,
+    return Obx(() {
+      if (widget.controller.isLoading.value) {
+        return const SizedBox(
+          height: 200,
+          child: Center(child: CircularProgressIndicator()),
+        );
+      }
+
+      return Column(
+        children: [
+          SizedBox(
+            height: 200,
+            child: PageView.builder(
+              controller: _pageController,
+              onPageChanged: (int page) {
+                setState(() {
+                  _currentPage = page;
+                });
+              },
+              itemCount: widget.controller.articles.length,
+              itemBuilder: (context, index) {
+                final article = widget.controller.articles[index];
+                return GestureDetector(
+                  onTap: () => Get.toNamed(
+                    Routes.DETAILS,
+                    arguments: article,
+                  ),
+                  child: Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 16),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(12),
+                      image: DecorationImage(
+                        image: NetworkImage(article.urlToImage ?? ''),
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(12),
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [
+                            Colors.transparent,
+                            Colors.black.withOpacity(0.7),
+                          ],
+                        ),
+                      ),
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.red,
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: const Text(
+                              'LIVE',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            article.title,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 8),
+                          Row(
+                            children: [
+                              Text(
+                                article.source,
+                                style: const TextStyle(
+                                  color: Colors.white70,
+                                  fontSize: 12,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              const Text(
+                                '•',
+                                style: TextStyle(color: Colors.white70),
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                "${DateTime.now().difference(article.publishedAt).inHours} hours ago",
+                                style: const TextStyle(
+                                  color: Colors.white70,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+          const SizedBox(height: 16),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: List.generate(
+              widget.controller.articles.length,
+              (index) => Container(
+                margin: const EdgeInsets.symmetric(horizontal: 2),
+                width: 8,
+                height: 8,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: _currentPage == index
+                      ? Colors.blue
+                      : Colors.grey.withOpacity(0.3),
+                ),
               ),
-            );
-          });
-        },
-      ),
-    );
+            ),
+          ),
+        ],
+      );
+    });
   }
 }
 
-class NewsListItem extends StatelessWidget {
+class RecommendationNewsCard extends StatelessWidget {
   final Article article;
   final VoidCallback onTap;
 
-  const NewsListItem({
+  const RecommendationNewsCard({
     super.key,
     required this.article,
     required this.onTap,
@@ -103,68 +323,88 @@ class NewsListItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      elevation: 2,
-      child: InkWell(
-        onTap: onTap,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+    return InkWell(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        child: Row(
           children: [
-            if (article.urlToImage != null)
-              Hero(
-                tag: article.url,
-                child: ClipRRect(
-                  borderRadius: const BorderRadius.vertical(top: Radius.circular(4)),
-                  child: Image.network(
-                    article.urlToImage!,
-                    height: 200,
-                    width: double.infinity,
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) {
-                      return Container(
-                        height: 200,
-                        color: Colors.grey[300],
-                        child: const Icon(Icons.error),
-                      );
-                    },
-                  ),
-                ),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: Image.network(
+                article.urlToImage ?? '',
+                width: 100,
+                height: 100,
+                fit: BoxFit.cover,
               ),
-            Padding(
-              padding: const EdgeInsets.all(16),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    article.title,
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.grey[200],
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Text(
+                      article.source,
+                      style: TextStyle(
+                        color: Colors.grey[800],
+                        fontSize: 12,
+                      ),
                     ),
                   ),
                   const SizedBox(height: 8),
-                  if (article.description != null)
-                    Text(
-                      article.description!,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: Theme.of(context).textTheme.bodyMedium,
+                  Text(
+                    article.title,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w500,
                     ),
-                  const SizedBox(height: 16),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 8),
                   Row(
                     children: [
-                      Icon(Icons.newspaper, size: 16, color: Colors.grey[600]),
-                      const SizedBox(width: 4),
+                      CircleAvatar(
+                        radius: 10,
+                        // backgroundImage: NetworkImage(
+                        //   'https://..',
+                        // ),
+                      ),
+                      const SizedBox(width: 8),
+                      SizedBox(
+                        width: 100,
+                        child: SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          // reverse: true,
+                          child: Text(
+                            article.author ?? "Pratik",
+                            style: TextStyle(
+                              color: Colors.grey[600],
+                              fontSize: 12,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
                       Text(
-                        article.source,
+                        '•',
                         style: TextStyle(color: Colors.grey[600]),
                       ),
-                      const Spacer(),
-                      Icon(Icons.access_time, size: 16, color: Colors.grey[600]),
-                      const SizedBox(width: 4),
+                      const SizedBox(width: 8),
                       Text(
-                        _formatDate(article.publishedAt),
-                        style: TextStyle(color: Colors.grey[600]),
+                        DateFormat('dd/MM/yyyy').format(article.publishedAt),
+                        style: TextStyle(
+                          color: Colors.grey[600],
+                          fontSize: 12,
+                        ),
                       ),
                     ],
                   ),
@@ -175,9 +415,5 @@ class NewsListItem extends StatelessWidget {
         ),
       ),
     );
-  }
-
-  String _formatDate(DateTime date) {
-    return '${date.month}/${date.day}/${date.year}';
   }
 }

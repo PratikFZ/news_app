@@ -24,13 +24,14 @@ class ArticleAdapter extends TypeAdapter<Article> {
       publishedAt: fields[4] as DateTime,
       content: fields[5] as String,
       url: fields[6] as String,
+      author: fields[7] as String?,
     );
   }
 
   @override
   void write(BinaryWriter writer, Article obj) {
     writer
-      ..writeByte(7)
+      ..writeByte(8)
       ..writeByte(0)
       ..write(obj.title)
       ..writeByte(1)
@@ -44,7 +45,9 @@ class ArticleAdapter extends TypeAdapter<Article> {
       ..writeByte(5)
       ..write(obj.content)
       ..writeByte(6)
-      ..write(obj.url);
+      ..write(obj.url)
+      ..writeByte(7)
+      ..write(obj.author);
   }
 
   @override

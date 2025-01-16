@@ -2,6 +2,8 @@ import 'package:get/get.dart';
 import '../modules/home/bindings/home_binding.dart';
 import '../modules/home/views/home_view.dart';
 import '../modules/details/views/details_view.dart';
+import '../modules/search/bindings/search_binding.dart';
+import '../modules/search/views/search_view.dart';
 
 part 'app_routes.dart';
 
@@ -18,5 +20,11 @@ class AppPages {
       name: Routes.DETAILS,
       page: () => DetailsView(),
     ),
+    GetPage(
+      name: Routes.SEARCH,
+      page: () => const SearchView(),
+      binding: SearchBinding(),
+    ),
   ];
 }
+
