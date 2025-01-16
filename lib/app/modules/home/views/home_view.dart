@@ -105,7 +105,10 @@ class HomeView extends GetView<HomeController> {
         currentIndex: 0,
         items: const [
           BottomNavigationBarItem(
-            icon: Icon(Icons.home, color: Colors.black,),
+            icon: Icon(
+              Icons.home,
+              color: Colors.black,
+            ),
             label: 'Home',
           ),
           BottomNavigationBarItem(
@@ -171,6 +174,11 @@ class _BreakingNewsCarouselState extends State<BreakingNewsCarousel> {
     });
   }
 
+  void _pauseAutoScroll() {
+    _timer?.cancel();
+    _timer = null;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Obx(() {
@@ -196,6 +204,12 @@ class _BreakingNewsCarouselState extends State<BreakingNewsCarousel> {
               itemBuilder: (context, index) {
                 final article = widget.controller.articles[index];
                 return GestureDetector(
+                  onLongPress: () {
+                    _pauseAutoScroll();
+                  },
+                  onLongPressUp: () {
+                    _startAutoScroll();
+                  },
                   onTap: () => Get.toNamed(
                     Routes.DETAILS,
                     arguments: article,
@@ -332,7 +346,8 @@ class RecommendationNewsCard extends StatelessWidget {
             ClipRRect(
               borderRadius: BorderRadius.circular(12),
               child: Image.network(
-                article.urlToImage ?? '',
+                article.urlToImage ??
+                    'https://www.google.com/s2/favicons?sz=64&domain_url=${article.url}',
                 width: 100,
                 height: 100,
                 fit: BoxFit.cover,

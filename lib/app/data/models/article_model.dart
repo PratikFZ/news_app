@@ -40,6 +40,13 @@ class Article extends HiveObject {
   });
 
   factory Article.fromJson(Map<String, dynamic> json) {
+    // Check if the article is removed or invalid
+    // if (json['title'] == '[Removed]' || 
+    //     json['content'] == '[Removed]' ||
+    //     json['description'] == '[Removed]') {
+    //   return null!; 
+    // }
+
     return Article(
       title: json['title'] ?? '',
       description: json['description'],

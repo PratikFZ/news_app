@@ -35,6 +35,10 @@ class HomeController extends GetxController {
         final jsonData = json.decode(response.body);
         articles.value = (jsonData['articles'] as List)
             .map((article) => Article.fromJson(article))
+            .where((article) => 
+                article.title != '[Removed]' && 
+                (article.content != '[Removed]' || article.content != '') &&
+                article.description != '[Removed]')
             .toList();
       } else {
         throw Exception('Failed to load news');
