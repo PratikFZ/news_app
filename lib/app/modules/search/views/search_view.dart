@@ -75,9 +75,11 @@ class SearchView extends GetView<NewsSearchController> {
                             padding: const EdgeInsets.only(right: 8),
                             child: ChoiceChip(
                               label: Text(category),
-                              selected: controller.selectedCategory.value == category,
+                              selected:
+                                  controller.selectedCategory.value == category,
                               onSelected: (selected) {
                                 controller.selectedCategory.value = category;
+                                controller.changeCategory(category);
                               },
                             ),
                           );
