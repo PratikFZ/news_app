@@ -1,3 +1,4 @@
+// ignore: file_names
 import 'package:flutter/material.dart';
 
 class InternetBanner extends StatefulWidget {
@@ -37,9 +38,7 @@ class _InternetBannerState extends State<InternetBanner> {
 
   @override
   Widget build(BuildContext context) {
-    return Align(
-      alignment: Alignment.bottomCenter,
-      child: AnimatedContainer(
+    return AnimatedContainer(
         duration: const Duration(milliseconds: 500),
         height: _height,
         color: widget.isInternetConnected ? Colors.green : Colors.red,
@@ -50,7 +49,6 @@ class _InternetBannerState extends State<InternetBanner> {
             style: const TextStyle(color: Colors.white),
           ),
         ),
-      )
-    );
+      );
   }
 }

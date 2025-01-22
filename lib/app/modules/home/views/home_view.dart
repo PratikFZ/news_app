@@ -109,7 +109,6 @@ class HomeView extends GetView<HomeController> {
 }
 
 
-
 class BreakingNewsCarousel extends StatefulWidget {
   final HomeController controller;
 
