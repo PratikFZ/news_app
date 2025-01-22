@@ -10,7 +10,7 @@ class HomeController extends GetxController {
   final articles = <Article>[].obs;
   final isLoading = true.obs;
   final selectedCategory = 'general'.obs;
-  var isInterNet = false.obs;
+  var isInternetConnected = false.obs;
   List<ConnectivityResult> connectionStatus = [ConnectivityResult.none].obs;
   final Connectivity _connectivity = Connectivity();
   late StreamSubscription<List<ConnectivityResult>> _connectivitySubscription;
@@ -53,14 +53,9 @@ class HomeController extends GetxController {
 
   Future<void> _updateConnectivity(List<ConnectivityResult> result) async {
     connectionStatus = result;
-    if (result.contains(ConnectivityResult.wifi) ||
-        result.contains(ConnectivityResult.mobile)) {
-    }
-    Get.snackbar(
-                      'No InternetT',
-                      'No InternetM',
-                      snackPosition: SnackPosition.BOTTOM
-                  );
+    isInternetConnected.value = result.contains(ConnectivityResult.wifi) ||
+        result.contains(ConnectivityResult.mobile);
+    fetchNews();
   }
 
   @override

@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import '../../../data/models/article_model.dart';
 import '../controllers/home_controller.dart';
 import '../../../routes/app_pages.dart';
+import '../../banner/InternetBanner.dart';
 
 class HomeView extends GetView<HomeController> {
   const HomeView({super.key});
@@ -12,122 +13,102 @@ class HomeView extends GetView<HomeController> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: SafeArea(
-        child: CustomScrollView(
-          slivers: [
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Row(
-                      children: [
-                        IconButton(
-                          icon: const Icon(Icons.menu),
-                          onPressed: () {},
-                        ),
-                        const Text(
-                          'Breaking News',
-                          style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
+        body: SafeArea(
+          child: CustomScrollView(
+            slivers: [
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Row(
+                        children: [
+                          IconButton(
+                            icon: const Icon(Icons.menu),
+                            onPressed: () {},
                           ),
-                        ),
-                      ],
-                    ),
-                    Row(
-                      children: [
-                        IconButton(
-                          icon: const Icon(Icons.search),
-                          onPressed: () => Get.toNamed(Routes.SEARCH),
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.notifications_outlined),
-                          onPressed: () {},
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            SliverToBoxAdapter(
-              child: BreakingNewsCarousel(controller: controller),
-            ),
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text(
-                      'Recommendation',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
+                          const Text(
+                            'Breaking News',
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
                       ),
-                    ),
-                    TextButton(
-                      onPressed: () {},
-                      child: const Text('View all'),
-                    ),
-                  ],
+                      Row(
+                        children: [
+                          IconButton(
+                            icon: const Icon(Icons.search),
+                            onPressed: () => Get.toNamed(Routes.SEARCH),
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.notifications_outlined),
+                            onPressed: () {},
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
               ),
-            ),
-            Obx(() {
-              if (controller.isLoading.value) {
-                return const SliverFillRemaining(
-                  child: Center(child: CircularProgressIndicator()),
+              SliverToBoxAdapter(
+                child: BreakingNewsCarousel(controller: controller),
+              ),
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        'Recommendation',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      TextButton(
+                        onPressed: () {},
+                        child: const Text('View all'),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              Obx(() {
+                if (controller.isLoading.value) {
+                  return const SliverFillRemaining(
+                    child: Center(child: CircularProgressIndicator()),
+                  );
+                }
+                return SliverList(
+                  delegate: SliverChildBuilderDelegate(
+                    (context, index) {
+                      final article = controller.articles[index];
+                      return RecommendationNewsCard(
+                        article: article,
+                        onTap: () => Get.toNamed(
+                          Routes.DETAILS,
+                          arguments: article,
+                        ),
+                      );
+                    },
+                    childCount: controller.articles.length,
+                  ),
                 );
-              }
-              return SliverList(
-                delegate: SliverChildBuilderDelegate(
-                  (context, index) {
-                    final article = controller.articles[index];
-                    return RecommendationNewsCard(
-                      article: article,
-                      onTap: () => Get.toNamed(
-                        Routes.DETAILS,
-                        arguments: article,
-                      ),
-                    );
-                  },
-                  childCount: controller.articles.length,
-                ),
-              );
-            }),
-          ],
+              }),
+            ],
+          ),
         ),
-      ),
-      // bottomNavigationBar: BottomNavigationBar(
-      //   currentIndex: 0,
-      //   items: const [
-      //     BottomNavigationBarItem(
-      //       icon: Icon(
-      //         Icons.home,
-      //         color: Colors.black,
-      //       ),
-      //       label: 'Home',
-      //     ),
-      //     BottomNavigationBarItem(
-      //       icon: Icon(Icons.language, color: Colors.black),
-      //       label: 'Discover',
-      //     ),
-      //     BottomNavigationBarItem(
-      //       icon: Icon(Icons.bookmark_border, color: Colors.black),
-      //       label: 'Saved',
-      //     ),
-      //     BottomNavigationBarItem(
-      //       icon: Icon(Icons.person_outline, color: Colors.black),
-      //       label: 'Profile',
-      //     ),
-      //   ],
-      // ),
-    );
+        bottomNavigationBar: Obx(
+          () => InternetBanner(isInternetConnected: controller.isInternetConnected.value,)
+        ));
   }
 }
+
+
 
 class BreakingNewsCarousel extends StatefulWidget {
   final HomeController controller;
