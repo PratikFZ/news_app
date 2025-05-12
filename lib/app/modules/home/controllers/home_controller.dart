@@ -68,10 +68,15 @@ class HomeController extends GetxController {
     isLoading.value = true;
     const apiKey = '6fc5e32fab30444392f12ce281eb98b4';
     final url =
-        'https://newsapi.org/v2/top-headlines?country=us&category=${selectedCategory.value}&apiKey=$apiKey';
+        'https://newsapi.org/v2/top-headlines?country=us&category=${selectedCategory.value}';
 
     try {
-      final response = await http.get(Uri.parse(url));
+      final response = await http.get(
+        Uri.parse(url),
+        headers: {
+          'x-api-key': apiKey, // Add the API key as a header
+        },
+      );
       if (response.statusCode == 200) {
         final jsonData = json.decode(response.body);
         articles.value = (jsonData['articles'] as List)

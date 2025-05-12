@@ -19,24 +19,29 @@ class NewsSearchController extends GetxController {
     isLoading.value = true;
     const apiKey = '6fc5e32fab30444392f12ce281eb98b4';
     String url;
-    
+
     if (searchQuery.value.isEmpty) {
-      url = 'https://newsapi.org/v2/top-headlines?country=us&apiKey=$apiKey';
+      url = 'https://newsapi.org/v2/top-headlines?country=us';
       if (selectedCategory.value.toLowerCase() != 'all') {
         url += '&category=${selectedCategory.value.toLowerCase()}';
       }
     } else {
-      url = 'https://newsapi.org/v2/everything?q=${searchQuery.value}&apiKey=$apiKey';
+      url = 'https://newsapi.org/v2/everything?q=${searchQuery.value}';
     }
 
     try {
-      final response = await http.get(Uri.parse(url));
+      final response = await http.get(
+        Uri.parse(url),
+        headers: {
+          'x-api-key': apiKey, // Add the API key as a header
+        },
+      );
       if (response.statusCode == 200) {
         final jsonData = json.decode(response.body);
         articles.value = (jsonData['articles'] as List)
             .map((article) => Article.fromJson(article))
-            .where((article) => 
-                article.title != '[Removed]' && 
+            .where((article) =>
+                article.title != '[Removed]' &&
                 (article.content != '[Removed]' || article.content != '') &&
                 article.description != '[Removed]')
             .toList();
