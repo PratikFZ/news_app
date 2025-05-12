@@ -1,0 +1,1 @@
+ /home/pratikfz/My\ project/news_app/.dart_tool/flutter_build/1c390f40533ed1075e82008d897851bf/native_assets.yaml: 
