@@ -5,6 +5,8 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import '../../../data/models/article_model.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:flutter/services.dart' show rootBundle;
+import 'package:shared_preferences/shared_preferences.dart';
 
 class HomeController extends GetxController {
   final articles = <Article>[].obs;
@@ -28,10 +30,22 @@ class HomeController extends GetxController {
   @override
   void onInit() {
     super.onInit();
+    loadSavedNews();
     fetchNews();
     initConnetivity();
     _connectivitySubscription =
         _connectivity.onConnectivityChanged.listen(_updateConnectivity);
+  }
+
+  Future<void> loadSavedNews() async {
+    final prefs = await SharedPreferences.getInstance();
+    final savedNews = prefs.getString('savedNews');
+    if (savedNews != null) {
+      final jsonData = json.decode(savedNews);
+      articles.value = (jsonData as List)
+          .map((article) => Article.fromJson(article))
+          .toList();
+    }
   }
 
   Future<void> initConnetivity() async {
@@ -90,11 +104,31 @@ class HomeController extends GetxController {
                 (article.content != '[Removed]' || article.content != '') &&
                 article.description != '[Removed]')
             .toList();
+
+        // Save fetched news to local storage
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('savedNews', json.encode(jsonData['articles']));
       } else {
         throw Exception('Failed to load news');
       }
     } catch (e) {
-      Get.snackbar('Error', 'Failed to fetch news: $e');
+      // Load fallback JSON file
+      try {
+        final fallbackData =
+            await rootBundle.loadString('assets/fallback_news.json');
+        final jsonData = json.decode(fallbackData);
+        articles.value = (jsonData['articles'] as List)
+            .map((article) => Article.fromJson(article))
+            .toList();
+
+        // Save fallback news to local storage
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('savedNews', json.encode(jsonData['articles']));
+
+        Get.snackbar('Notice', 'Loaded fallback news data.');
+      } catch (fallbackError) {
+        Get.snackbar('Error', 'Failed to fetch news: $e');
+      }
     } finally {
       isLoading.value = false;
     }

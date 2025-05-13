@@ -1,0 +1,18 @@
+{
+  "articles": [
+    {
+      "title": "Sample News 1",
+      "description": "This is a description for Sample News 1.",
+      "content": "This is the content for Sample News 1.",
+      "urlToImage": "https://via.placeholder.com/150",
+      "publishedAt": "2025-05-13T12:00:00Z"
+    },
+    {
+      "title": "Sample News 2",
+      "description": "This is a description for Sample News 2.",
+      "content": "This is the content for Sample News 2.",
+      "urlToImage": "https://via.placeholder.com/150",
+      "publishedAt": "2025-05-13T13:00:00Z"
+    }
+  ]
+}
