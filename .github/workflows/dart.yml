@@ -1,4 +1,4 @@
-name: Dart
+name: Deploy Flutter Web to GitHub Pages
 
 on:
   push:
@@ -21,11 +21,15 @@ jobs:
       with:
         flutter-version: '3.29.3'
 
-    - name: Build Web
-      run: flutter build web
+    - name: Install Flutter dependencies
+      run: flutter pub get
+
+    - name: Build Flutter Web
+      run: flutter build web --release
 
     - name: Deploy to GitHub Pages
       uses: peaceiris/actions-gh-pages@v3
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
         publish_dir: build/web
+        publish_branch: gh-pages
