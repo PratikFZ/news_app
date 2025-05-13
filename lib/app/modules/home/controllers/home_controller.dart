@@ -1,12 +1,14 @@
 import 'dart:async';
+import 'dart:io';
+import 'package:path_provider/path_provider.dart';
 
 import 'package:get/get.dart';
-import 'package:http/http.dart' as http;
+// import 'package:http/http.dart' as http;
 import 'dart:convert';
 import '../../../data/models/article_model.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/services.dart' show rootBundle;
-import 'package:shared_preferences/shared_preferences.dart';
+// import 'package:shared_preferences/shared_preferences.dart';
 
 class HomeController extends GetxController {
   final articles = <Article>[].obs;
@@ -38,13 +40,29 @@ class HomeController extends GetxController {
   }
 
   Future<void> loadSavedNews() async {
-    final prefs = await SharedPreferences.getInstance();
-    final savedNews = prefs.getString('savedNews');
-    if (savedNews != null) {
-      final jsonData = json.decode(savedNews);
-      articles.value = (jsonData as List)
-          .map((article) => Article.fromJson(article))
-          .toList();
+    try {
+      final directory = await getApplicationDocumentsDirectory();
+      final filePath = '${directory.path}/fallback_news.json';
+      final file = File(filePath);
+
+      if (await file.exists()) {
+        // Load news from the updated JSON file
+        final savedNews = await file.readAsString();
+        final jsonData = json.decode(savedNews);
+        articles.value = (jsonData['articles'] as List)
+            .map((article) => Article.fromJson(article))
+            .toList();
+      } else {
+        // Fallback to the original JSON file in assets
+        final fallbackData =
+            await rootBundle.loadString('assets/fallback_news.json');
+        final jsonData = json.decode(fallbackData);
+        articles.value = (jsonData['articles'] as List)
+            .map((article) => Article.fromJson(article))
+            .toList();
+      }
+    } catch (e) {
+      Get.snackbar('Error', 'Failed to load saved news: $e');
     }
   }
 
@@ -80,55 +98,27 @@ class HomeController extends GetxController {
 
   Future<void> fetchNews() async {
     isLoading.value = true;
-    const apiKey = '6fc5e32fab30444392f12ce281eb98b4';
-    final url =
-        'https://newsapi.org/v2/top-headlines?country=us&category=${selectedCategory.value}';
-
-    // Use CORS Anywhere proxy
-    final proxyUrl = 'https://cors-anywhere.herokuapp.com/';
-    final proxiedUrl = '$proxyUrl$url';
 
     try {
-      final response = await http.get(
-        Uri.parse(proxiedUrl),
-        headers: {
-          'x-api-key': apiKey, // Add the API key as a header
-        },
-      );
-      if (response.statusCode == 200) {
-        final jsonData = json.decode(response.body);
-        articles.value = (jsonData['articles'] as List)
-            .map((article) => Article.fromJson(article))
-            .where((article) =>
-                article.title != '[Removed]' &&
-                (article.content != '[Removed]' || article.content != '') &&
-                article.description != '[Removed]')
-            .toList();
+      // Load news from the fallback JSON file
+      final fallbackData =
+          await rootBundle.loadString('assets/fallback_news.json');
+      final jsonData = json.decode(fallbackData);
+      articles.value = (jsonData['articles'] as List)
+          .map((article) => Article.fromJson(article))
+          .toList();
 
-        // Save fetched news to local storage
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.setString('savedNews', json.encode(jsonData['articles']));
-      } else {
-        throw Exception('Failed to load news');
-      }
+      // Update the JSON file with the fetched news
+      final directory = await getApplicationDocumentsDirectory();
+      final filePath = '${directory.path}/fallback_news.json';
+      final file = File(filePath);
+
+      // Write the updated news data to the file
+      await file.writeAsString(json.encode({'articles': articles}));
+
+      Get.snackbar('Notice', 'News data updated in JSON file.');
     } catch (e) {
-      // Load fallback JSON file
-      try {
-        final fallbackData =
-            await rootBundle.loadString('assets/fallback_news.json');
-        final jsonData = json.decode(fallbackData);
-        articles.value = (jsonData['articles'] as List)
-            .map((article) => Article.fromJson(article))
-            .toList();
-
-        // Save fallback news to local storage
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.setString('savedNews', json.encode(jsonData['articles']));
-
-        Get.snackbar('Notice', 'Loaded fallback news data.');
-      } catch (fallbackError) {
-        Get.snackbar('Error', 'Failed to fetch news: $e');
-      }
+      Get.snackbar('Error', 'Failed to load or update news: $e');
     } finally {
       isLoading.value = false;
     }
