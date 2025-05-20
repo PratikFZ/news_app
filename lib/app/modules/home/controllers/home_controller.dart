@@ -71,12 +71,12 @@ class HomeController extends GetxController {
         'https://newsapi.org/v2/top-headlines?country=us&category=${selectedCategory.value}';
 
     // Use CORS Anywhere proxy
-    final proxyUrl = 'https://cors-anywhere.herokuapp.com/';
-    final proxiedUrl = '$proxyUrl$url';
+    // final proxyUrl = 'https://cors-anywhere.herokuapp.com/';
+    // final proxiedUrl = '$proxyUrl$url';
 
     try {
       final response = await http.get(
-        Uri.parse(proxiedUrl),
+        Uri.parse(url),
         headers: {
           'x-api-key': apiKey, // Add the API key as a header
         },
