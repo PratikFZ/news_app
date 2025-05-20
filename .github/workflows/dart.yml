@@ -51,7 +51,7 @@ jobs:
         run: |
           # If your Pages site is at https://<user>.github.io/<repo>/,
           # uncomment and adjust the next line:
-          flutter build web --release --base-href "/${{ github.repository_owner }}/${{ github.event.repository.name }}/"
+          flutter build web --release --base-href "/${{ github.event.repository.name }}/"
           #flutter build web --release
 
       # 7. Configure Git user for the deployment commit
