@@ -86830,7 +86830,7 @@ iT(){var s=0,r=A.M(t.H),q=1,p=[],o=[],n=this,m,l,k,j,i,h,g,f
 var $async$iT=A.N(function(a,b){if(a===1){p.push(b)
 s=q}while(true)switch(s){case 0:g=n.ay
 g.su(0,!0)
-m="https://cors-anywhere.herokuapp.com/"+("https://newsapi.org/v2/top-headlines?country=us&category="+A.m(n.ch.gu(0)))
+m="https://newsapi.org/v2/top-headlines?country=us&category="+A.m(n.ch.gu(0))
 q=3
 i=t.N
 s=6
