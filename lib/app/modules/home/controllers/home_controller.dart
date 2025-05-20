@@ -1,37 +1,82 @@
+import 'dart:async';
+
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import '../../../data/models/article_model.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 
-class NewsSearchController extends GetxController {
+class HomeController extends GetxController {
   final articles = <Article>[].obs;
   final isLoading = true.obs;
-  final selectedCategory = 'All'.obs;
-  final searchQuery = ''.obs;
+  final selectedCategory = 'general'.obs;
+  var isInternetConnected = false.obs;
+  List<ConnectivityResult> connectionStatus = [ConnectivityResult.none].obs;
+  final Connectivity _connectivity = Connectivity();
+  late StreamSubscription<List<ConnectivityResult>> _connectivitySubscription;
+
+  final categories = [
+    'general',
+    'business',
+    'technology',
+    'sports',
+    'entertainment',
+    'health',
+    'science'
+  ];
 
   @override
   void onInit() {
     super.onInit();
     fetchNews();
+    initConnetivity();
+    _connectivitySubscription =
+        _connectivity.onConnectivityChanged.listen(_updateConnectivity);
+  }
+
+  Future<void> initConnetivity() async {
+    late List<ConnectivityResult> result;
+
+    try {
+      result = await _connectivity.checkConnectivity();
+    } catch (e) {
+      // ignore: avoid_print
+      print("Error : $e");
+    }
+
+    if (isClosed) {
+      // ignore: null_argument_to_non_null_type
+      return Future.value(null);
+    }
+    return _updateConnectivity(result);
+  }
+
+  Future<void> _updateConnectivity(List<ConnectivityResult> result) async {
+    connectionStatus = result;
+    isInternetConnected.value = result.contains(ConnectivityResult.wifi) ||
+        result.contains(ConnectivityResult.mobile);
+    fetchNews();
+  }
+
+  @override
+  void onClose() {
+    _connectivitySubscription.cancel();
+    super.onClose();
   }
 
   Future<void> fetchNews() async {
     isLoading.value = true;
     const apiKey = '6fc5e32fab30444392f12ce281eb98b4';
-    String url;
+    final url =
+        'https://newsapi.org/v2/top-headlines?country=us&category=${selectedCategory.value}';
 
-    if (searchQuery.value.isEmpty) {
-      url = 'https://newsapi.org/v2/top-headlines?country=us';
-      if (selectedCategory.value.toLowerCase() != 'all') {
-        url += '&category=${selectedCategory.value.toLowerCase()}';
-      }
-    } else {
-      url = 'https://newsapi.org/v2/everything?q=${searchQuery.value}';
-    }
+    // Use CORS Anywhere proxy
+    final proxyUrl = 'https://cors-anywhere.herokuapp.com/';
+    final proxiedUrl = '$proxyUrl$url';
 
     try {
       final response = await http.get(
-        Uri.parse(url),
+        Uri.parse(proxiedUrl),
         headers: {
           'x-api-key': apiKey, // Add the API key as a header
         },
@@ -55,14 +100,8 @@ class NewsSearchController extends GetxController {
     }
   }
 
-  void search(String query) {
-    searchQuery.value = query;
-    fetchNews();
-  }
-
   void changeCategory(String category) {
     selectedCategory.value = category;
-    searchQuery.value = '';
     fetchNews();
   }
 }
