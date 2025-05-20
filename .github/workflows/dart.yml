@@ -6,30 +6,67 @@ on:
       - main
 
 permissions:
-  contents: write
+  contents: write     # allow pushing to gh-pages
+  pages: write        # enable Pages deployments
 
 jobs:
-  build:
+  build-and-deploy:
     runs-on: ubuntu-latest
+    environment: github-pages
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+      # 1. Check out the repo (full history to allow force‑push)
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-    - name: Setup Flutter
-      uses: subosito/flutter-action@v2
-      with:
-        flutter-version: '3.29.3'
+      # 2. Cache Dart/Flutter packages for speed
+      - name: Cache pub dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.pub-cache
+            .dart_tool
+          key: ${{ runner.os }}-pub-${{ hashFiles('**/pubspec.yaml') }}
 
-    - name: Install Flutter dependencies
-      run: flutter pub get
+      # 3. Install Flutter SDK
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.29.3'
 
-    - name: Build Flutter Web
-      run: flutter build web --release
+      # 4. Get dependencies
+      - name: flutter pub get
+        run: flutter pub get
 
-    - name: Deploy to GitHub Pages
-      uses: peaceiris/actions-gh-pages@v3
-      with:
-        github_token: ${{ secrets.GITHUB_TOKEN }}
-        publish_dir: build/web
-        publish_branch: gh-pages
+      # 5. (Optional) Run analyzers/tests
+      #- name: Analyze & Test
+      #  run: |
+      #    flutter analyze
+      #    flutter test
+
+      # 6. Build the web release
+      - name: Build Flutter web
+        run: |
+          # If your Pages site is at https://<user>.github.io/<repo>/,
+          # uncomment and adjust the next line:
+          flutter build web --release --base-href "/${{ github.repository_owner }}/${{ github.event.repository.name }}/"
+          #flutter build web --release
+
+      # 7. Configure Git user for the deployment commit
+      - name: Configure Git
+        run: |
+          git config --local user.name "github-actions[bot]"
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+
+      # 8. Deploy to gh-pages
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./build/web
+          publish_branch: gh-pages
+          # Optional:
+          # keep_files: true
+          # commit_message: "chore: publishing to gh-pages (${ { github.sha } })"
