@@ -17,25 +17,20 @@ class NewsSearchController extends GetxController {
 
   Future<void> fetchNews() async {
     isLoading.value = true;
-    const apiKey = '6fc5e32fab30444392f12ce281eb98b4';
     String url;
 
     if (searchQuery.value.isEmpty) {
-      url = 'https://newsapi.org/v2/top-headlines?country=us';
+      url = 'https://miki696969.pythonanywhere.com/api/top-headlines?q=${searchQuery.value}';
       if (selectedCategory.value.toLowerCase() != 'all') {
-        url += '&category=${selectedCategory.value.toLowerCase()}';
+        url += '?category=${selectedCategory.value.toLowerCase()}';
       }
     } else {
-      url = 'https://newsapi.org/v2/everything?q=${searchQuery.value}';
+      url = 'https://miki696969.pythonanywhere.com/api/everything?q=${searchQuery.value}';
     }
 
     try {
-      final response = await http.get(
-        Uri.parse(url),
-        headers: {
-          'x-api-key': apiKey, // Add the API key as a header
-        },
-      );
+      final response = await http.get(Uri.parse(url));
+
       if (response.statusCode == 200) {
         final jsonData = json.decode(response.body);
         articles.value = (jsonData['articles'] as List)
@@ -46,7 +41,7 @@ class NewsSearchController extends GetxController {
                 article.description != '[Removed]')
             .toList();
       } else {
-        throw Exception('Failed to load news');
+        throw Exception('Failed to load news: ${response.statusCode}');
       }
     } catch (e) {
       Get.snackbar('Error', 'Failed to fetch news: $e');

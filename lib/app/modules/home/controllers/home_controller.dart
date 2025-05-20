@@ -66,21 +66,13 @@ class HomeController extends GetxController {
 
   Future<void> fetchNews() async {
     isLoading.value = true;
-    const apiKey = '6fc5e32fab30444392f12ce281eb98b4';
-    final url =
-        'https://newsapi.org/v2/top-headlines?country=us&category=${selectedCategory.value}';
 
-    // Use CORS Anywhere proxy
-    // final proxyUrl = 'https://cors-anywhere.herokuapp.com/';
-    // final proxiedUrl = '$proxyUrl$url';
+    // Fixed URL with protocol
+    final url = 'https://miki696969.pythonanywhere.com/api/top-headlines';
 
     try {
-      final response = await http.get(
-        Uri.parse(url),
-        headers: {
-          'x-api-key': apiKey, // Add the API key as a header
-        },
-      );
+      final response = await http.get(Uri.parse(url));
+
       if (response.statusCode == 200) {
         final jsonData = json.decode(response.body);
         articles.value = (jsonData['articles'] as List)
@@ -91,7 +83,7 @@ class HomeController extends GetxController {
                 article.description != '[Removed]')
             .toList();
       } else {
-        throw Exception('Failed to load news');
+        throw Exception('Failed to load news: ${response.statusCode}');
       }
     } catch (e) {
       Get.snackbar('Error', 'Failed to fetch news: $e');
